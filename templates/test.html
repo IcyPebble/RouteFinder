@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RouteFinder</title>
+    <link rel="stylesheet" href="../static/main.css" type="text/css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+
+<body>
+    <div id="screen">
+        <div id="dialog" class="dialog">
+            <div class="title" id="dialogTitle">Choose threshold</div>
+            <div class="content" id="dialogContent">
+                <img id="img" class="resultDialogImg" src="../park_plan.png">
+                <div id="selectedColors">
+                    <div class="color" style="background-color: brown;"></div>
+                    <div class="color" style="background-color: green;"></div>
+                    <div class="color" style="background-color: whitesmoke;"></div>
+                </div>
+            </div>
+            <div>
+                <button type="button" class="button dialogBtn" id="dialogContinueBtn" disabled>
+                    <div class="loader"></div>
+                    Continue
+                </button>
+                <button type="button" class="button dialogBtn" id="dialogReadjustBtn" disabled>
+                    Readjust
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    </script>
+</body>
+
+</html>

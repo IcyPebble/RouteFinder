@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RouteFinder</title>
+    <link rel="stylesheet" href="static/index.css" type="text/css">
+</head>
+
+<body>
+    <div id="screen">
+        <form method="post" enctype="multipart/form-data">
+            <label for="fileInput" id="fileInputBtn" class="button">
+                Select file
+            </label>
+            <input type="file" accept=".png,.jpg,.routefinder" id="fileInput" name="fileInput">
+            <input type="submit" id="startBtn" class="button" value="Start" disabled>
+        </form>
+    </div>
+
+    <script src="static/index.js"></script>
+</body>
+
+</html>
