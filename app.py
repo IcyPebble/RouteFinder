@@ -12,6 +12,7 @@ import base64
 import networkx as nx
 import json
 import uuid
+import os
 
 app = Quart(__name__)
 socketio = pysocketio.AsyncServer(async_mode='asgi')
@@ -160,6 +161,7 @@ async def handle_disconnection(id):
         del close_gaps_sources[id]
 
 if __name__ == '__main__':
+    port = os.getenv("PORT", 8080)
     config = Config()
-    config.bind = ["192.168.178.41:8080"]
+    config.bind = [f"localhost:{port}"]
     asyncio.run(serve(socketio_app, config))
