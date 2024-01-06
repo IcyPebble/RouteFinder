@@ -4,15 +4,12 @@ from quart import render_template
 from quart import request
 import socketio as pysocketio
 import asyncio
-from hypercorn.config import Config
-from hypercorn.asyncio import serve
 import numpy as np
 import cv2
 import base64
 import networkx as nx
 import json
 import uuid
-import os
 
 app = Quart(__name__)
 socketio = pysocketio.AsyncServer(async_mode='asgi')
@@ -159,9 +156,3 @@ async def handle_disconnection(id):
         del clean_path_sources[id]
     if id in close_gaps_sources.keys():
         del close_gaps_sources[id]
-
-if __name__ == '__main__':
-    port = os.getenv("PORT", 8080)
-    config = Config()
-    config.bind = [f"localhost:{port}"]
-    asyncio.run(serve(socketio_app, config))
