@@ -215,6 +215,12 @@ div:has(>#clipOverlay) {
 #selectedColors>.color {
     width: 100%;
     height: 100%;
+    margin-left: 0.4vw;
+    border-radius: 18px;
+}
+
+.color:first-child {
+    margin-left: 0vw !important;
 }
 
 #cleanPathContent,
@@ -383,6 +389,10 @@ div:has(>#clipOverlay) {
 
     #selectedColors {
         width: 80vw;
+    }
+
+    #selectedColors>.color {
+        margin-left: 0.8vw;
     }
 
     #cleanPathImg,

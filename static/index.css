@@ -17,6 +17,11 @@ body {
     overflow: hidden;
 }
 
+#title {
+    width: 60vw;
+    margin-bottom: 2vw;
+}
+
 form {
     display: flex;
     flex-direction: column;
@@ -78,7 +83,7 @@ form {
     max-width: 60vw;
     height: 4vw;
     word-break: keep-all;
-    overflow-x: scroll;
+    overflow: hidden;
     font-size: 2.2vw;
 }
 
@@ -91,6 +96,10 @@ form {
 
 /* mobile */
 @media only screen and (max-width: 768px) {
+    #title {
+        width: 90vw;
+        margin-bottom: 8vw;
+    }
 
     #startBtn,
     #fileInputBtn {
