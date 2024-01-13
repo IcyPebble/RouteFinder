@@ -592,7 +592,7 @@ var routefinderGraphFunc = {
     }
 };
 
-var map, mapImg, graph, labels;
+var map, mapImg, graph, labels, pathMask;
 socket.on("showNavigator", (pathImg) => {
     let mapDiv = document.createElement("div");
     mapDiv.id = "map"
@@ -615,6 +615,7 @@ socket.on("showNavigator", (pathImg) => {
 
     mapImg.on("click", ({ latlng }) => placeMarker(latlng));
 
+    pathMask = pathImg;
     labels = routefinderGraphFunc.label(pathImg);
     graph = routefinderGraphFunc.getGraphFromPath(pathImg);
     let graphPoints = [...graph.edgeEntries()].map(({ source, target }) => {
@@ -651,19 +652,17 @@ function getSaveBtn(options) {
 }
 
 function saveFile() {
-    socket.emit("save", ({ pathMask }) => {
-        let file = new Blob([JSON.stringify({
-            "img": imgData.url,
-            "path_mask": pathMask
-        })], { type: "application/json" });
+    let file = new Blob([JSON.stringify({
+        "img": imgData.url,
+        "path_mask": pathMask
+    })], { type: "application/json" });
 
-        let url = URL.createObjectURL(file)
-        let link = document.createElement("a");
-        link.href = url;
-        link.download = "untitled.routefinder";
-        link.click();
-        URL.revokeObjectURL(url);
-    });
+    let url = URL.createObjectURL(file)
+    let link = document.createElement("a");
+    link.href = url;
+    link.download = "untitled.routefinder";
+    link.click();
+    URL.revokeObjectURL(url);
 }
 
 var setStart = false;

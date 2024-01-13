@@ -7,7 +7,6 @@ import asyncio
 import numpy as np
 import cv2
 import base64
-import networkx as nx
 import json
 import uuid
 
@@ -66,6 +65,7 @@ async def connection(id, temp_id):
         await socketio.emit("cropImg", img_to_data_url(route_finder_instances[id].original_img), room=id)   
     else:
         await socketio.emit("showNavigator", route_finder_instances[id].path.tolist(), room=id)
+        cleanup()
 
 @socketio.on("cropImgArgs")
 async def handle_crop_img_arguments(id, args):
@@ -128,15 +128,13 @@ async def handle_close_gaps_arguments(id, args):
 @socketio.on("getGraph")
 async def getGraph(id):
     await socketio.emit("showNavigator", route_finder_instances[id].path.tolist(), room=id)
-
-@socketio.on("save")
-async def handle_save_request(id):
-    return {
-        "pathMask": route_finder_instances[id].path.tolist()
-    }
+    cleanup()
 
 @socketio.on("disconnect")
 async def handle_disconnection(id):
+    cleanup()
+
+def cleanup():
     global route_finder_instances, crop_img_sources, clean_path_sources, close_gaps_sources
 
     if id in route_finder_instances.keys():
