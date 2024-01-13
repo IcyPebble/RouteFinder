@@ -463,8 +463,137 @@ function closeGaps_dialog() {
     }
 }
 
-var map, mapImg
-socket.on("showNavigator", (graphData) => {
+var routefinderGraphFunc = {
+    getGraphFromPath: (pathImg) => {
+        let shape = [pathImg.length, pathImg[0].length]
+
+        let edges = [];
+        let nodes = [];
+        for (let r = 0; r < shape[0]; r++) {
+            for (let c = 0; c < shape[1]; c++) {
+                if (pathImg[r][c]) {
+                    nodes.push([r, c]);
+
+                    let neighbours = [
+                        [r - 1, c - 1], [r - 1, c], [r - 1, c + 1],
+                        [r, c - 1]
+                    ];
+
+                    neighbours.forEach((neighbour) => {
+                        let [nr, nc] = neighbour;
+                        if (pathImg[nr]) {
+                            if (pathImg[nr][nc]) {
+                                edges.push([[r, c], [nr, nc]]);
+                            }
+                        }
+                    });
+
+                }
+            }
+        }
+
+        let graph = new graphology.Graph({ type: "undirected" });
+        nodes.forEach((node) => graph.addNode(node));
+        edges.forEach((edge) => graph.addEdge(...edge));
+
+        return graph;
+    },
+
+    label: (img) => {
+        let shape = [img.length, img[0].length];
+
+        let labels = Array.from(
+            new Array(shape[0]), () => new Array(shape[1]).fill(0)
+        );
+        let labelN = 1;
+
+        for (let r = 0; r < shape[0]; r++) {
+            for (let c = 0; c < shape[1]; c++) {
+                if (img[r][c] && labels[r][c] == 0) {
+                    labels[r][c] = labelN;
+
+                    let queue = [[r, c]];
+                    while (queue.length > 0) {
+                        let [cr, cc] = queue.pop();
+                        [
+                            [cr - 1, cc - 1], [cr - 1, cc], [cr - 1, cc + 1],
+                            [cr, cc - 1], [cr, cc], [cr, cc + 1],
+                            [cr + 1, cc - 1], [cr + 1, cc], [cr + 1, cc + 1]
+                        ].forEach(([nr, nc]) => {
+                            if (
+                                (nr >= 0 && nr < shape[0]) &&
+                                (nc >= 0 && nc < shape[1]) &&
+                                (img[nr][nc] && labels[nr][nc] == 0)
+                            ) {
+                                labels[nr][nc] = labelN;
+                                queue.push([nr, nc]);
+                            }
+                        })
+                    }
+
+                    labelN++;
+                }
+            }
+        }
+
+        return labels
+    },
+
+    findRoute: (graph, labels, source, target) => {
+        let pathPoints = graph.nodes().map(
+            (node) => Object.fromEntries(node.split(",").map((n, i) => [["x", "y"][i], parseInt(n)]))
+        );
+        let distance = function (a, b) {
+            return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2));
+        }
+        let tree = new kdTree(pathPoints, distance, ["x", "y"]);
+
+        let start = tree.nearest({ x: source[0], y: source[1] }, 1)[0][0];
+        let altStart = tree.nearest({ x: target[0], y: target[1] }, 1)[0][0];
+
+        let start_pathPoints = pathPoints.filter(
+            (p) => labels[p.x][p.y] === labels[start.x][start.y]
+        );
+        let altStart_pathPoints = pathPoints.filter(
+            (p) => labels[p.x][p.y] === labels[altStart.x][altStart.y]
+        );
+
+        let start_tree = new kdTree(start_pathPoints, distance, ["x", "y"]);
+        let altStart_tree = new kdTree(altStart_pathPoints, distance, ["x", "y"]);
+
+        let end = start_tree.nearest({ x: target[0], y: target[1] }, 1)[0][0];
+        let altEnd = altStart_tree.nearest({ x: source[0], y: source[1] }, 1)[0][0];
+
+        let reversedTargets;
+        if (distance(end, { x: target[0], y: target[1] }) <= distance(altEnd, { x: source[0], y: source[1] })) {
+            source = [start.x, start.y];
+            target = [end.x, end.y];
+            reversedTargets = false;
+        } else {
+            source = [altStart.x, altStart.y];
+            target = [altEnd.x, altEnd.y];
+            reversedTargets = true;
+        }
+
+        let path;
+        try {
+            path = graphologyLibrary.shortestPath.bidirectional(graph, source, target);
+        } catch (e) {
+            console.log(e);
+            path = null;
+        }
+        if (path !== null) {
+            path = path.map(
+                (node) => node.split(",").map((n) => parseInt(n))
+            );
+        }
+
+        return [path, reversedTargets];
+    }
+};
+
+var map, mapImg, graph, labels;
+socket.on("showNavigator", (pathImg) => {
     let mapDiv = document.createElement("div");
     mapDiv.id = "map"
     screen.replaceChildren(mapDiv);
@@ -486,10 +615,14 @@ socket.on("showNavigator", (graphData) => {
 
     mapImg.on("click", ({ latlng }) => placeMarker(latlng));
 
-    let graphPoints = graphData["links"].map((link) =>
-        [[imgData.height - link["source"][0], link["source"][1]],
-        [imgData.height - link["target"][0], link["target"][1]]]
-    );
+    labels = routefinderGraphFunc.label(pathImg);
+    graph = routefinderGraphFunc.getGraphFromPath(pathImg);
+    let graphPoints = [...graph.edgeEntries()].map(({ source, target }) => {
+        source = source.split(",").map((n) => parseInt(n));
+        target = target.split(",").map((n) => parseInt(n));
+        return [[imgData.height - source[0], source[1]],
+        [imgData.height - target[0], target[1]]];
+    });
     L.polyline(graphPoints,
         { color: "#000", opacity: 0.1, smoothFactor: 4, interactive: false }
     ).addTo(map);
@@ -518,11 +651,10 @@ function getSaveBtn(options) {
 }
 
 function saveFile() {
-    socket.emit("save", ({ pathMask, graphData }) => {
+    socket.emit("save", ({ pathMask }) => {
         let file = new Blob([JSON.stringify({
             "img": imgData.url,
-            "path_mask": pathMask,
-            "graph": graphData
+            "path_mask": pathMask
         })], { type: "application/json" });
 
         let url = URL.createObjectURL(file)
@@ -677,11 +809,14 @@ function findRoute() {
         Math.round(imgData.height - endPos.lat),
         Math.round(endPos.lng)
     ];
-    socket.emit("findRoute", { "start": startPos, "end": endPos });
+
+    displayRoute(
+        routefinderGraphFunc.findRoute(graph, labels, startPos, endPos)
+    );
 }
 
 var path, path_ext;
-socket.on("route", ({ route, reversed }) => {
+function displayRoute([route, reversed]) {
     route = route.map((yx) => [imgData.height - yx[0], yx[1]]);
 
     if (!path) {
@@ -694,7 +829,7 @@ socket.on("route", ({ route, reversed }) => {
         [[startMarker.getLatLng(), (reversed) ? route.at(-1) : route[0]],
         [endMarker.getLatLng(), (reversed) ? route[0] : route.at(-1)]]
     );
-})
+}
 
 function reset() {
     mapImg.on("click", ({ latlng }) => placeMarker(latlng));

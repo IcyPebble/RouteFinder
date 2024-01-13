@@ -37,7 +37,7 @@ async def start():
         img = cv2.imdecode(decoded_img, cv2.IMREAD_COLOR)
         route_finder = RouteFinder(img)
         route_finder.path = np.array(data["path_mask"])
-        route_finder.graph = nx.node_link_graph(data["graph"])
+        route_finder.graph = True
 
     else: 
         filestr = (await request.files)["fileInput"].read()
@@ -65,7 +65,7 @@ async def connection(id, temp_id):
     if not hasattr(route_finder_instances[id], "graph"):
         await socketio.emit("cropImg", img_to_data_url(route_finder_instances[id].original_img), room=id)   
     else:
-        await socketio.emit("showNavigator", nx.node_link_data(route_finder_instances[id].graph), room=id)
+        await socketio.emit("showNavigator", route_finder_instances[id].path.tolist(), room=id)
 
 @socketio.on("cropImgArgs")
 async def handle_crop_img_arguments(id, args):
@@ -127,20 +127,11 @@ async def handle_close_gaps_arguments(id, args):
 
 @socketio.on("getGraph")
 async def getGraph(id):
-    await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].get_graph_from_path)
-
-    await socketio.emit("showNavigator", nx.node_link_data(route_finder_instances[id].graph), room=id)
-
-@socketio.on("findRoute")
-async def find_route(id, req):
-    route, reversed_targets = await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].find_route, tuple(req["start"]), tuple(req["end"]))
-
-    await socketio.emit("route", {"route": route.tolist(), "reversed": reversed_targets}, room=id)
+    await socketio.emit("showNavigator", route_finder_instances[id].path.tolist(), room=id)
 
 @socketio.on("save")
 async def handle_save_request(id):
     return {
-        "graphData": nx.node_link_data(route_finder_instances[id].graph),
         "pathMask": route_finder_instances[id].path.tolist()
     }
 
