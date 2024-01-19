@@ -118,7 +118,7 @@ async def handle_close_gaps_arguments(id, args):
         close_gaps_sources[id] = route_finder_instances[id].path.copy()
     route_finder_instances[id].path = close_gaps_sources[id].copy()
 
-    await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].close_gaps, args["pointsToCheck"], args["triangleLength"], args["triangleSpreadAngle"])
+    await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].close_gaps, args["chordPoints"], args["maxDist"], args["maxAngle"])
     result = route_finder_instances[id].original_img.copy()
     result[route_finder_instances[id].path] = [0, 255, 0]
     result[np.invert(route_finder_instances[id].path)] = [0, 0, 0]

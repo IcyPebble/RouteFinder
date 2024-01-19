@@ -5,7 +5,6 @@ from skimage.morphology import skeletonize, disk
 from skimage.draw import polygon2mask
 from scipy.ndimage import label, binary_dilation
 import cv2
-import shapely
 import networkx as nx
 from scipy.spatial import KDTree
 
@@ -102,42 +101,18 @@ class RouteFinder:
             return neighbours[0]
         return
 
-    def _get_triangle(self, endpoint, linepoint, length, spread_angle):
-        x1, y1 = endpoint
-        x2, y2 = linepoint
-
-        extended_point = (x2 + length*(x1 - x2), y2 + length*(y1 - y2))
-
-        ox, oy = endpoint
-        px, py = extended_point
-
-        angle = spread_angle/2 * np.pi/180
-        arm_point1 = (
-            ox + np.cos(angle) * (px - ox) - np.sin(angle) * (py - oy),
-            oy + np.sin(angle) * (px - ox) + np.cos(angle) * (py - oy)
-        )
-
-        angle = (360-spread_angle/2) * np.pi/180
-        arm_point2 = (
-            ox + np.cos(angle) * (px - ox) - np.sin(angle) * (py - oy),
-            oy + np.sin(angle) * (px - ox) + np.cos(angle) * (py - oy)
-        )
-
-        return shapely.Polygon([endpoint, arm_point1, extended_point, arm_point2])
-
-    def close_gaps(self, points_to_check=3, triangle_length=12, triangle_spread_angle=45):
-        '''
-        Close path gaps using triangles
-        '''
-
+    def close_gaps(self, chord_points=6, max_dist=40, max_angle=30):
         endpoints = self._get_endpoints()
 
-        # Compute triangles
-        triangles = []
         for endpoint in zip(*endpoints):
+            path_without = self.path.copy()
+            path_without[endpoint] = False
+            tree_points = np.vstack(np.where(path_without)).T
+            tree = KDTree(tree_points)
+
             point_path = np.array([endpoint])
             i = 0
-            while i < points_to_check:
+            while i < chord_points:
                 next_point = self._get_next_point(point_path, self.path)
                 if next_point is None:
                     break
@@ -145,66 +120,31 @@ class RouteFinder:
                 point_path = np.vstack((point_path, next_point))
                 i += 1
 
-            triangle = self._get_triangle(
-                endpoint, point_path[-1], triangle_length, triangle_spread_angle
-            )
+            x1, y1 = point_path[-1]
+            x2, y2 = endpoint
+            t = max_dist / math.dist((x1, y1), (x2, y2)) +1
+            extended_point = (round((1-t)*x1 + t*x2), round((1-t)*y1 + t*y2))
 
-            triangles.append((shapely.Point(endpoint), triangle))
+            best_score = np.inf
+            best_scoring_point = None
+            for idx in tree.query_ball_point(np.array(endpoint), max_dist):
+                a = math.dist(extended_point, tree_points[idx])
+                b = math.dist(endpoint, tree_points[idx])
+                c = math.dist(endpoint, extended_point)
+                alpha = math.degrees(
+                    np.arccos(round((b**2 + c**2 - a**2) / (2*b*c), 4))
+                )
 
-        img_indices = np.indices(self.path.shape).transpose(1, 2, 0).reshape(-1, 2)
-        linepoints = img_indices[self.path.flatten()]
-        linepoints = shapely.multipoints(list(zip(linepoints[:, 0], linepoints[:, 1])))
-        endpoints = shapely.multipoints(list(zip(*endpoints)))
-
-        for endpoint, triangle in triangles:
-            connection_point = None
-
-            # Find possible connection point of the end points
-            intersecting_endpoints = shapely.intersection_all([triangle, endpoints])
-            if intersecting_endpoints and not isinstance(intersecting_endpoints, shapely.Point):
-                shortest_distance = np.inf
-                for point in intersecting_endpoints.geoms:
-                    distance = shapely.distance(point, endpoint)
-                    if (not point.equals(endpoint)) and distance < shortest_distance:
-                        shortest_distance = distance
-                        connection_point = point
+                if alpha <= max_angle and b <= max_dist:
+                    score = math.dist((0, 0), (b/max_dist, alpha/max_angle))
+                    if score < best_score:
+                        best_scoring_point = tree_points[idx]
+                        best_score = score
             
-            else:
-                # Find possible connection point of the line points
-                intersecting_linepoints = shapely.intersection_all([triangle, linepoints])
-                line_distance = np.inf
-                nearest_linepoint = None
-                if intersecting_linepoints and not isinstance(intersecting_endpoints, shapely.Point):
-                    for point in intersecting_linepoints.geoms:
-                        distance = shapely.distance(point, endpoint)
-                        if (not point.equals(endpoint)) and distance < line_distance:
-                            line_distance = distance
-                            nearest_linepoint = point
-                
-                # Find possible connection point of the end points of intersecting triangles
-                triangle_distance = np.inf
-                nearest_trianglepoint = None
-                for other_endpoint, other_triangle in triangles:
-                    if (not other_endpoint.equals(endpoint)) and shapely.intersects(other_triangle, triangle):
-                        distance = shapely.distance(other_endpoint, endpoint)
-                        if distance < triangle_distance:
-                            triangle_distance = distance
-                            nearest_trianglepoint = other_endpoint
-                
-                # Choose closest connection point 
-                if nearest_linepoint or nearest_trianglepoint:
-                    if line_distance < triangle_distance:
-                        connection_point = nearest_linepoint
-                    else:
-                        connection_point = nearest_trianglepoint
-            
-            if connection_point:
-                # Draw line to connection point
-                p1 = tuple(reversed((int(endpoint.x), int(endpoint.y))))
-                p2 = tuple(reversed((int(connection_point.x), int(connection_point.y))))
+            if best_scoring_point is not None:
+                p1 = tuple(reversed(endpoint))
+                p2 = tuple(reversed(tuple(best_scoring_point)))
                 self.path = np.bool_(cv2.line(np.float32(self.path), p1, p2, 1))
-                linepoints = img_indices[self.path.flatten()]
-                linepoints = shapely.multipoints(list(zip(linepoints[:, 0], linepoints[:, 1])))
         
         return self.path
     

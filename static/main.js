@@ -379,17 +379,17 @@ function closeGaps_dialog() {
     let closeGapsContent = document.createElement("div");
     closeGapsContent.id = "closeGapsContent";
     closeGapsContent.innerHTML = `
-        <img id="closeGapsImg">
-        <div id="closeGapsInputContainer">
-            <label for="closeGapsPointsInput" class="closeGapsInputLabel">Points to check: </label>
-            <input id="closeGapsPointsInput" class="closeGapsInput" type="number" name="closeGapsPointsInput" min="2" value="3" required>
+    <img id="closeGapsImg">
+    <div id="closeGapsInputContainer">
+        <label for="closeGapsPointsInput" class="closeGapsInputLabel">Chord points: </label>
+        <input id="closeGapsPointsInput" class="closeGapsInput" type="number" name="closeGapsPointsInput" min="2" value="6" required>
 
-            <label for="closeGapsLengthInput" class="closeGapsInputLabel">Triangle length: </label>
-            <input id="closeGapsLengthInput" class="closeGapsInput" type="number" name="closeGapsLengthInput" min="1" value="12" required>
+        <label for="closeGapsLengthInput" class="closeGapsInputLabel">Maximum distance: </label>
+        <input id="closeGapsLengthInput" class="closeGapsInput" type="number" name="closeGapsLengthInput" min="1" value="40" required>
 
-            <label for="closeGapsSpreadInput" class="closeGapsInputLabel">Triangle spread: </label>
-            <input id="closeGapsSpreadInput" class="closeGapsInput" type="number"name="closeGapsSpreadInput" min="0" max="360" value="45" required>
-        </div>
+        <label for="closeGapsSpreadInput" class="closeGapsInputLabel">Maximum angle: </label>
+        <input id="closeGapsSpreadInput" class="closeGapsInput" type="number"name="closeGapsSpreadInput" min="0" max="180" value="30" required>
+    </div>
     `;
     dialogContent.replaceChildren(closeGapsContent);
 
@@ -426,9 +426,9 @@ function closeGaps_dialog() {
 
     dialogContinueBtn.onclick = () => {
         socket.emit("closeGapsArgs", {
-            "pointsToCheck": parseInt(pointsInput.value),
-            "triangleLength": parseInt(lengthInput.value),
-            "triangleSpreadAngle": parseInt(spreadInput.value)
+            "chordPoints": parseInt(pointsInput.value),
+            "maxDist": parseInt(lengthInput.value),
+            "maxAngle": parseInt(spreadInput.value)
         });
         dialogContinueBtn.classList.add("loading");
         dialogContinueBtn.disabled = true;
