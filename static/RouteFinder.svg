@@ -25,7 +25,7 @@
           <attributes>
             <dur>
               <explanation>duration of offset</explanation>
-              <default>4s</default>
+              <default>0.6s</default>
               <usage>
                 set animation offset with following javascript command:
                   Array.from(
@@ -137,7 +137,7 @@
           attributeName="opacity"
           to="0"
           begin="0"
-          dur="4s" />
+          dur="0.6s" />
         <animate
           class="LogoAnimation"
           attributeName="stroke-dashoffset"
@@ -159,7 +159,7 @@
           attributeName="opacity"
           to="0"
           begin="0"
-          dur="4s" />
+          dur="0.6s" />
         <animate
           id="LogoAnimation"
           class="LogoAnimation"
@@ -183,7 +183,7 @@
           attributeName="fill-opacity"
           to="0"
           begin="0"
-          dur="4s" />
+          dur="0.6s" />
         <animate
           class="LogoAnimation"
           attributeName="fill-opacity"
@@ -202,7 +202,7 @@
         attributeName="opacity"
         to="0"
         begin="0"
-        dur="4s" />
+        dur="0.6s" />
       <g transform-origin="145.14 32.95">
         <g
           transform="matrix(0.00661458,0,0,0.00661458,141.96659,33.666982)"
@@ -259,7 +259,7 @@
         attributeName="opacity"
         to="0"
         begin="0"
-        dur="4s" />
+        dur="0.6s" />
       <g transform-origin="59.1 41.9">
         <g
           style="display:inline"
