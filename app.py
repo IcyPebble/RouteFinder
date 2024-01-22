@@ -88,8 +88,9 @@ async def readjust_crop_img(id):
 async def handle_get_path_arguments(id, args):
     await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].get_path, args["points"])
     result = route_finder_instances[id].original_img.copy()
-    result[route_finder_instances[id].path] = [0, 255, 0]
-    result[np.invert(route_finder_instances[id].path)] = [0, 0, 0]
+    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)
+    result[route_finder_instances[id].path] = [0, 255, 0, 255]
+    result[np.invert(route_finder_instances[id].path)] = [0, 0, 0, 0]
 
     await socketio.emit("cleanPath", img_to_data_url(result), room=id)
 
@@ -106,8 +107,9 @@ async def handle_clean_path_arguments(id, args):
 
     await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].clean_path, args)
     result = route_finder_instances[id].original_img.copy()
-    result[route_finder_instances[id].path] = [0, 255, 0]
-    result[np.invert(route_finder_instances[id].path)] = [0, 0, 0]
+    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)
+    result[route_finder_instances[id].path] = [0, 255, 0, 255]
+    result[np.invert(route_finder_instances[id].path)] = [0, 0, 0, 0]
 
     await socketio.emit("closeGaps", img_to_data_url(result), room=id)
 
@@ -120,8 +122,9 @@ async def handle_close_gaps_arguments(id, args):
 
     await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].close_gaps, args["chordPoints"], args["maxDist"], args["maxAngle"])
     result = route_finder_instances[id].original_img.copy()
-    result[route_finder_instances[id].path] = [0, 255, 0]
-    result[np.invert(route_finder_instances[id].path)] = [0, 0, 0]
+    result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)
+    result[route_finder_instances[id].path] = [0, 255, 0, 255]
+    result[np.invert(route_finder_instances[id].path)] = [0, 0, 0, 0]
 
     await socketio.emit("closeGapsResult", img_to_data_url(result), room=id)
 

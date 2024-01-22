@@ -118,6 +118,25 @@ function enableZoom(element, zoomPerDiagonal, maxZoom) {
     return container;
 }
 
+function showResultOverlay(img) {
+    img.style.backgroundImage = `url("static/show_image.svg"), linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("${imgData.url}")`;
+    img.style.backgroundColor = "unset";
+}
+
+function hideResultOverlay(img) {
+    img.style.backgroundImage = `url("static/hide_image.svg")`;
+    img.style.backgroundColor = "#000";
+}
+
+function toggleResultOverlay(img) {
+    img.style.backgroundImage = (
+        img.style.backgroundImage == `url("static/hide_image.svg")`
+    ) ? `url("static/show_image.svg"), linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("${imgData.url}")` : `url("static/hide_image.svg")`;
+    img.style.backgroundColor = (
+        img.style.backgroundColor == "unset"
+    ) ? "#000" : "unset";
+}
+
 var screen = document.getElementById("screen");
 var dialog = document.getElementById("dialog");
 var dialogTitle = document.getElementById("dialogTitle");
@@ -213,6 +232,8 @@ function getPath_dialog(dataURL) {
     let getPathDialogImg = new Image();
     getPathDialogImg.id = "getPathDialogImg";
     getPathDialogImg.className = "resultDialogImg";
+    getPathDialogImg.style.backgroundColor = "unset";
+    getPathDialogImg.style.backgroundImage = "unset";
     let marginTop = (matchMedia("only screen and (max-width: 768px)").matches) ? "5vw" : "4vw";
     getPathDialogImg.style.marginTop = "0vw";
     selectedColors = document.createElement("div");
@@ -286,6 +307,7 @@ function getPath_dialog(dataURL) {
         socket.on("cleanPath", (resultDataURL) => {
             dialogContent.replaceChildren(getPathDialogImg);
             getPathDialogImg.style.marginTop = marginTop;
+            hideResultOverlay(getPathDialogImg);
             getPathDialogImg.src = resultDataURL;
             getPathDialogImg.onload = () => {
                 dialogContinueBtn.classList.remove("loading");
@@ -293,6 +315,10 @@ function getPath_dialog(dataURL) {
                 dialogReadjustBtn.disabled = false;
                 dialogTitle.innerHTML = "Selected path";
                 getPathDialogImg.onpointerup = () => { };
+                getPathDialogImg.onclick = () => {
+                    toggleResultOverlay(getPathDialogImg);
+                };
+
                 dialogContinueBtn.onclick = () => {
                     cleanPath_dialog();
                 }
@@ -346,12 +372,14 @@ function cleanPath_dialog() {
             let resultImg = new Image();
             resultImg.className = "resultDialogImg";
             dialogContent.replaceChildren(resultImg);
+            hideResultOverlay(resultImg);
             resultImg.src = dataURL;
             resultImg.onload = () => {
                 dialogContinueBtn.classList.remove("loading");
                 dialogContinueBtn.disabled = false;
                 dialogReadjustBtn.disabled = false;
                 dialogTitle.innerHTML = "Resulting path";
+                resultImg.onclick = () => { toggleResultOverlay(resultImg) };
 
                 dialogContinueBtn.onclick = () => {
                     closeGaps_dialog();
@@ -437,12 +465,14 @@ function closeGaps_dialog() {
             let resultImg = new Image();
             resultImg.className = "resultDialogImg";
             dialogContent.replaceChildren(resultImg);
+            hideResultOverlay(resultImg);
             resultImg.src = dataURL;
             resultImg.onload = () => {
                 dialogContinueBtn.classList.remove("loading");
                 dialogContinueBtn.disabled = false;
                 dialogReadjustBtn.disabled = false;
                 dialogTitle.innerHTML = "Resulting path";
+                resultImg.onclick = () => { toggleResultOverlay(resultImg) };
 
                 dialogContinueBtn.onclick = () => {
                     socket.emit("getGraph");

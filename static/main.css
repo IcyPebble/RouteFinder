@@ -184,6 +184,11 @@ div:has(>#clipOverlay) {
     height: 24vw;
     margin-top: 4vw;
     object-fit: contain;
+    background-color: unset;
+    background-image: unset;
+    background-size: 2.6vw, contain, contain;
+    background-repeat: no-repeat;
+    background-position: top 1vw right 1vw, center, center;
 }
 
 #cropImgDialogImg,
@@ -385,6 +390,8 @@ div:has(>#clipOverlay) {
         width: 80vw;
         height: 50vw;
         margin-top: 5vw;
+        background-size: 4.2vw, contain, contain;
+        background-position: top 1.8vw right 1.8vw, center, center;
     }
 
     #selectedColors {
