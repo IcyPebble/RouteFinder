@@ -212,8 +212,9 @@ function cropImg_dialog(dataURL) {
         socket.emit("cropImgArgs", cropImgArgs);
         dialogContinueBtn.classList.add("loading");
         dialogContinueBtn.disabled = true;
+        cropImgDialogImg.onpointerup = () => { };
+        cropImgDialogImg.onclick = () => { };
         socket.on("getPath", (dataURL) => {
-            cropImgDialogImg.onpointerup = () => { };
             getPath_dialog(dataURL);
         })
     }
@@ -296,6 +297,8 @@ function getPath_dialog(dataURL) {
         dialogContinueBtn.classList.add("loading");
         dialogContinueBtn.disabled = true;
         dialogReadjustBtn.disabled = true;
+        getPathDialogImg.onpointerup = () => { };
+        getPathDialogImg.onclick = () => { };
 
         socket.on("cleanPath", (resultDataURL) => {
             dialogContent.replaceChildren(getPathDialogImg);
@@ -307,7 +310,6 @@ function getPath_dialog(dataURL) {
                 dialogContinueBtn.disabled = false;
                 dialogReadjustBtn.disabled = false;
                 dialogTitle.innerHTML = "Selected path";
-                getPathDialogImg.onpointerup = () => { };
                 getPathDialogImg.onclick = () => {
                     toggleResultOverlay(getPathDialogImg);
                 };
