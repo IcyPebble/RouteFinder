@@ -120,21 +120,16 @@ function enableZoom(element, zoomPerDiagonal, maxZoom) {
 
 function showResultOverlay(img) {
     img.style.backgroundImage = `url("static/show_image.svg"), linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("${imgData.url}")`;
-    img.style.backgroundColor = "unset";
 }
 
 function hideResultOverlay(img) {
     img.style.backgroundImage = `url("static/hide_image.svg")`;
-    img.style.backgroundColor = "#000";
 }
 
 function toggleResultOverlay(img) {
     img.style.backgroundImage = (
         img.style.backgroundImage == `url("static/hide_image.svg")`
     ) ? `url("static/show_image.svg"), linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)), url("${imgData.url}")` : `url("static/hide_image.svg")`;
-    img.style.backgroundColor = (
-        img.style.backgroundColor == "unset"
-    ) ? "#000" : "unset";
 }
 
 var screen = document.getElementById("screen");
@@ -167,7 +162,7 @@ function cropImg_dialog(dataURL) {
     polygon.setAttribute("stroke", "black");
     svg.appendChild(polygon);
 
-    let marginTop = (matchMedia("only screen and (max-width: 768px)").matches) ? "5vw" : "4vw";
+    let marginTop = (matchMedia("only screen and (max-width: 768px)").matches) ? "0px" : "4vw";
     cropImgDialogImg.style.marginTop = "0vw";
     svg.style.marginTop = "0vw";
 
@@ -232,9 +227,8 @@ function getPath_dialog(dataURL) {
     let getPathDialogImg = new Image();
     getPathDialogImg.id = "getPathDialogImg";
     getPathDialogImg.className = "resultDialogImg";
-    getPathDialogImg.style.backgroundColor = "unset";
     getPathDialogImg.style.backgroundImage = "unset";
-    let marginTop = (matchMedia("only screen and (max-width: 768px)").matches) ? "5vw" : "4vw";
+    let marginTop = (matchMedia("only screen and (max-width: 768px)").matches) ? "0px" : "4vw";
     getPathDialogImg.style.marginTop = "0vw";
     selectedColors = document.createElement("div");
     selectedColors.id = "selectedColors";
@@ -243,7 +237,6 @@ function getPath_dialog(dataURL) {
     let zoomContainer = enableZoom(getPathDialogImg, 2, 4);
     zoomContainer.style.marginTop = marginTop;
 
-    let getPathArgs = {}
     getPathDialogImg.src = dataURL;
     getPathDialogImg.onload = () => {
         let canvas = document.createElement('canvas');
