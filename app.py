@@ -65,7 +65,7 @@ async def connection(id, temp_id):
         await socketio.emit("cropImg", img_to_data_url(route_finder_instances[id].original_img), room=id)   
     else:
         await socketio.emit("showNavigator", route_finder_instances[id].path.tolist(), room=id)
-        cleanup()
+        cleanup(id)
 
 @socketio.on("cropImgArgs")
 async def handle_crop_img_arguments(id, args):
@@ -86,12 +86,16 @@ async def readjust_crop_img(id):
 
 @socketio.on("getPathArgs")
 async def handle_get_path_arguments(id, args):
+    global clean_path_sources
+
     await asyncio.get_event_loop().run_in_executor(None, route_finder_instances[id].get_path, args["points"])
     result = route_finder_instances[id].original_img.copy()
     result = cv2.cvtColor(result, cv2.COLOR_BGR2BGRA)
     result[route_finder_instances[id].path] = [0, 255, 0, 255]
     result[np.invert(route_finder_instances[id].path)] = [0, 0, 0, 0]
 
+    if id in clean_path_sources.keys():
+        del clean_path_sources[id]
     await socketio.emit("cleanPath", img_to_data_url(result), room=id)
 
 @socketio.on("readjustGetPath")
@@ -100,7 +104,7 @@ async def readjust_get_path(id):
         
 @socketio.on("cleanPathArgs")
 async def handle_clean_path_arguments(id, args):
-    global clean_path_sources
+    global clean_path_sources, close_gaps_sources
     if not id in clean_path_sources.keys():
         clean_path_sources[id] = route_finder_instances[id].path.copy()
     route_finder_instances[id].path = clean_path_sources[id].copy()
@@ -111,6 +115,8 @@ async def handle_clean_path_arguments(id, args):
     result[route_finder_instances[id].path] = [0, 255, 0, 255]
     result[np.invert(route_finder_instances[id].path)] = [0, 0, 0, 0]
 
+    if id in close_gaps_sources.keys():
+        del close_gaps_sources[id]
     await socketio.emit("closeGaps", img_to_data_url(result), room=id)
 
 @socketio.on("closeGapsArgs")
@@ -131,13 +137,13 @@ async def handle_close_gaps_arguments(id, args):
 @socketio.on("getGraph")
 async def getGraph(id):
     await socketio.emit("showNavigator", route_finder_instances[id].path.tolist(), room=id)
-    cleanup()
+    cleanup(id)
 
 @socketio.on("disconnect")
 async def handle_disconnection(id):
-    cleanup()
+    cleanup(id)
 
-def cleanup():
+def cleanup(id):
     global route_finder_instances, crop_img_sources, clean_path_sources, close_gaps_sources
 
     if id in route_finder_instances.keys():
